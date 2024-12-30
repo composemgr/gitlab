@@ -1,0 +1,42 @@
+name: gitlab
+services:
+  server:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab
+    hostname: gitlab
+    restart: always
+    pull_policy: always
+    shm_size: 1g
+    environment:
+      - BASE_HOST_NAME=${BASE_HOST_NAME:-gitlab}
+      - GITLAB_SSH_PORT=2223
+      - SERVICE_FQDN_GITLAB_80
+      - TZ=${TZ:-America/New_York}
+      - GITLAB_TIMEZONE=${TZ:-America/New_York}
+      - GITLAB_ROOT_USER=${APP_ADMIN_USER:-root}
+      - GITLAB_ROOT_PASSWORD={APP_ADMIN_PASS:-8lRng2HcyrKh3fPQ1uFUHudvhliiJcqw}
+      - GITLAB_HOST=https://${BASE_HOST_NAME}
+      - EXTERNAL_URL=https://${BASE_HOST_NAME}
+      - GITLAB_SMTP_ENABLE=true
+      - GITLAB_STARTTLS_AUTO=true
+      - GITLAB_SMTP_PORT=${EMAIL_SERVER_PORT:-587}
+      - GITLAB_EMAIL_FROM=${EMAIL_SERVER_FROM_EMAIL}
+      - GITLAB_SMTP_DOMAIN=${EMAIL_SERVER_HOST:-172.17.0.1}
+      - GITLAB_SMTP_ADDRESS=${EMAIL_SERVER_HOST:-172.17.0.1}
+      - GITLAB_SMTP_USER_NAME=${EMAIL_SERVER_LOGIN_NAME}
+      - GITLAB_SMTP_PASSWORD=${EMAIL_SERVER_LOGIN_PASS}
+      - 'GITLAB_OMNIBUS_CONFIG=external_url "https://${BASE_HOST_NAME}"; nginx["listen_https"] = false; nginx["listen_port"] = 80; gitlab_rails["gitlab_shell_ssh_port"] = ${GITLAB_SSH_PORT}; gitlab_rails["smtp_enable"] = ${GITLAB_SMTP_ENABLE}; gitlab_rails["smtp_address"] = "${GITLAB_SMTP_ADDRESS}"; gitlab_rails["smtp_port"] = ${GITLAB_SMTP_PORT}; gitlab_rails["smtp_user_name"] = "${GITLAB_SMTP_USER_NAME}"; gitlab_rails["smtp_password"] = "${GITLAB_SMTP_PASSWORD}"; gitlab_rails["smtp_domain"] = "${GITLAB_SMTP_DOMAIN}"; gitlab_rails["smtp_authentication"] = "login"; gitlab_rails["smtp_enable_starttls_auto"] = ${GITLAB_STARTTLS_AUTO}; gitlab_rails["smtp_tls"] = ${GITLAB_SMTP_TLS}; gitlab_rails["gitlab_email_from"] = "${GITLAB_EMAIL_FROM}"; gitlab_rails["gitlab_email_reply_to"] = "${GITLAB_EMAIL_REPLY_TO}";'
+    ports:
+      - '2223:22'
+      - 172.17.0.1:59129:80
+    volumes:
+      - /var/lib/srv/$USER/docker/gitlab/gitlab-ce/latest/rootfs/config/gitlab:/etc/gitlab
+      - /var/lib/srv/$USER/docker/gitlab/gitlab-ce/latest/rootfs/data/gitlab:/var/opt/gitlab
+      - /var/lib/srv/$USER/docker/gitlab/gitlab-ce/latest/rootfs/logs/gitlab:/var/log/gitlab
+    networks:
+      - gitlab
+
+networks:
+  gitlab:
+    name: gitlab
+    external: false
