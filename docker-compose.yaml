@@ -1,0 +1,50 @@
+# nginx proxy address - http://172.17.0.1:59129
+
+name: gitlab
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  app:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab-app
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    shm_size: 4g
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      BASE_HOST_NAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      EXTERNAL_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+      SERVICE_FQDN_GITLAB_80: ""
+      GITLAB_SSH_PORT: 2223
+      GITLAB_TIMEZONE: ${TZ:-America/New_York}
+      GITLAB_ROOT_USER: ${APP_ADMIN_USER:-root}
+      GITLAB_ROOT_PASSWORD: ${APP_ADMIN_PASS:-changeme_admin_password}
+      GITLAB_HOST: https://${BASE_HOST_NAME:-$HOSTNAME}
+      GITLAB_STARTTLS_AUTO: true
+      GITLAB_SMTP_ENABLE: true
+      GITLAB_SMTP_PORT: ${EMAIL_SERVER_PORT:-587}
+      GITLAB_SMTP_ADDRESS: ${EMAIL_SERVER_HOST:-172.17.0.1}
+      GITLAB_SMTP_DOMAIN: ${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}
+      GITLAB_SMTP_USER_NAME: ${EMAIL_SERVER_LOGIN_NAME:-}
+      GITLAB_SMTP_PASSWORD: ${EMAIL_SERVER_LOGIN_PASS:-}
+      GITLAB_EMAIL_FROM: ${EMAIL_SERVER_MAIL_FROM:-no-reply@${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}}
+    ports:
+      - '2223:22'
+      - '172.17.0.1:59129:80'
+    volumes:
+      - './rootfs/config/gitlab:/etc/gitlab'
+      - './rootfs/data/log/gitlab:/var/log/gitlab'
+      - './rootfs/data/gitlab:/var/opt/gitlab'
+    networks:
+      - gitlab
+
+networks:
+  gitlab:
+    name: gitlab
+    external: false
