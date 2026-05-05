@@ -38,9 +38,9 @@ services:
       - '2223:22'
       - '172.17.0.1:59129:80'
     volumes:
-      - './rootfs/config/gitlab:/etc/gitlab'
-      - './rootfs/data/log/gitlab:/var/log/gitlab'
-      - './rootfs/data/gitlab:/var/opt/gitlab'
+      - './volumes/config/gitlab:/etc/gitlab'
+      - './volumes/data/log/gitlab:/var/log/gitlab'
+      - './volumes/data/gitlab:/var/opt/gitlab'
     networks:
       - gitlab
 
