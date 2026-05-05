@@ -51,9 +51,9 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/gitlab` - Data storage
-- `./rootfs/data/log/gitlab` - Data storage
-- `./rootfs/data/gitlab` - Data storage
+- `./volumes/config/gitlab` - Data storage
+- `./volumes/data/log/gitlab` - Data storage
+- `./volumes/data/gitlab` - Data storage
 
 ## 🔐 Security
 
