@@ -9,7 +9,7 @@ x-logging: &default-logging
 
 services:
   app:
-    image: 'gitlab/gitlab-ce:latest'
+    image: gitlab/gitlab-ce:latest
     container_name: gitlab-app
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
@@ -18,22 +18,21 @@ services:
     logging: *default-logging
     environment:
       TZ: ${TZ:-America/New_York}
-      BASE_HOST_NAME: ${BASE_HOST_NAME:-$HOSTNAME}
-      EXTERNAL_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
-      SERVICE_FQDN_GITLAB_80: ""
-      GITLAB_SSH_PORT: 2223
-      GITLAB_TIMEZONE: ${TZ:-America/New_York}
-      GITLAB_ROOT_USER: ${APP_ADMIN_USER:-root}
-      GITLAB_ROOT_PASSWORD: ${APP_ADMIN_PASS:-changeme_admin_password}
-      GITLAB_HOST: https://${BASE_HOST_NAME:-$HOSTNAME}
-      GITLAB_STARTTLS_AUTO: true
-      GITLAB_SMTP_ENABLE: true
-      GITLAB_SMTP_PORT: ${EMAIL_SERVER_PORT:-587}
-      GITLAB_SMTP_ADDRESS: ${EMAIL_SERVER_HOST:-172.17.0.1}
-      GITLAB_SMTP_DOMAIN: ${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}
-      GITLAB_SMTP_USER_NAME: ${EMAIL_SERVER_LOGIN_NAME:-}
-      GITLAB_SMTP_PASSWORD: ${EMAIL_SERVER_LOGIN_PASS:-}
-      GITLAB_EMAIL_FROM: ${EMAIL_SERVER_MAIL_FROM:-no-reply@${BASE_DOMAIN_NAME:-${BASE_HOST_NAME}}}
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://${BASE_HOST_NAME:-$HOSTNAME}'
+        gitlab_rails['time_zone'] = '${TZ:-America/New_York}'
+        gitlab_rails['initial_root_password'] = '${APP_ADMIN_PASS:-changeme_admin_password}'
+        gitlab_rails['smtp_enable'] = true
+        gitlab_rails['smtp_address'] = '${EMAIL_SERVER_HOST:-172.17.0.1}'
+        gitlab_rails['smtp_port'] = ${EMAIL_SERVER_PORT:-587}
+        gitlab_rails['smtp_user_name'] = '${EMAIL_SERVER_USER:-}'
+        gitlab_rails['smtp_password'] = '${EMAIL_SERVER_PASS:-}'
+        gitlab_rails['smtp_domain'] = '${BASE_DOMAIN_NAME:-example.com}'
+        gitlab_rails['smtp_enable_starttls_auto'] = true
+        gitlab_rails['gitlab_email_from'] = '${EMAIL_SERVER_MAIL_FROM:-noreply@example.com}'
+        gitlab_rails['gitlab_email_reply_to'] = '${EMAIL_SERVER_MAIL_FROM:-noreply@example.com}'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
     ports:
       - '2223:22'
       - '172.17.0.1:59129:80'
