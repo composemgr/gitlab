@@ -1,4 +1,4 @@
-# nginx proxy address - http://172.17.0.1:59129
+# nginx proxy address - http://172.17.0.1:64186
 
 name: gitlab
 x-logging: &default-logging
@@ -11,6 +11,7 @@ services:
   app:
     image: gitlab/gitlab-ce:latest
     container_name: gitlab-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
@@ -19,9 +20,9 @@ services:
     environment:
       TZ: ${TZ:-America/New_York}
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://${BASE_HOST_NAME:-$HOSTNAME}'
+        external_url 'http://${BASE_HOST_NAME:-$HOSTNAME}:64186'
         gitlab_rails['time_zone'] = '${TZ:-America/New_York}'
-        gitlab_rails['initial_root_password'] = '${APP_ADMIN_PASS:-changeme_admin_password}'
+        gitlab_rails['initial_root_password'] = '${APP_ADMIN_PASS:-replace-with-a-random-password}'
         gitlab_rails['smtp_enable'] = true
         gitlab_rails['smtp_address'] = '${EMAIL_SERVER_HOST:-172.17.0.1}'
         gitlab_rails['smtp_port'] = ${EMAIL_SERVER_PORT:-587}
@@ -36,38 +37,21 @@ services:
       CONTAINER_NAME: gitlab-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
-      - '2223:22'
-      - '172.17.0.1:59129:80'
+      - '172.17.0.1:64186:80'
     volumes:
       - './volumes/config/gitlab:/etc/gitlab'
-      - './volumes/data/log/gitlab:/var/log/gitlab'
+      - './volumes/logs/gitlab:/var/log/gitlab'
       - './volumes/data/gitlab:/var/opt/gitlab'
+    healthcheck:
+      test: ['CMD-SHELL', '/opt/gitlab/bin/gitlab-healthcheck --fail --max-time 10']
+      interval: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 300s
     networks:
       - gitlab
-      - proxy
-      - cloudflare
-    labels:
-      - 'traefik.enable=true'
-      - 'cloudflare.enable=true'
-      - 'traefik.docker.network=proxy'
-      - 'cloudflare.service=http://gitlab-app:80'
-      - 'cloudflare.hostname=gitlab.${CLOUDFLARE_ZONE_NAME:-}'
-      - 'traefik.http.routers.gitlab-app.entrypoints=http'
-      - 'traefik.http.routers.gitlab-app-secure.tls=true'
-      - 'traefik.http.routers.gitlab-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.middlewares.gitlab-app-https-redirect.redirectscheme.scheme=https'
-      - 'traefik.http.routers.gitlab-app.middlewares=gitlab-app-https-redirect'
-      - 'traefik.http.routers.gitlab-app-secure.entrypoints=https'
-      - 'traefik.http.routers.gitlab-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.routers.gitlab-app-secure.tls.certresolver=cloudflare'
-      - 'traefik.http.routers.gitlab-app-secure.service=gitlab-app'
-      - 'traefik.http.services.gitlab-app.loadbalancer.server.port=80'
 
 networks:
   gitlab:
     name: gitlab
     external: false
-  proxy:
-    external: true
-  cloudflare:
-    external: true

@@ -1,10 +1,10 @@
 ## 👋 Welcome to gitlab 🚀
 
-Complete DevOps platform with Git repository management
+The DevOps platform built on a single application
 
 ## 📋 Description
 
-Complete DevOps platform with Git repository management
+The DevOps platform built on a single application
 
 ## 🚀 Services
 
@@ -21,7 +21,8 @@ curl -q -LSsf "https://raw.githubusercontent.com/composemgr/gitlab/main/docker-c
 ```bash
 git clone "https://github.com/composemgr/gitlab" ~/.local/srv/docker/gitlab
 cd ~/.local/srv/docker/gitlab
-docker compose up -d
+cp default.env .env
+docker compose --env-file .env up -d
 ```
 
 ### Option 3: Using composemgr
@@ -35,30 +36,74 @@ composemgr install gitlab
 
 ```shell
 TZ=America/New_York
-TZ=America/New_York
-APP_ADMIN_USER=root
-APP_ADMIN_PASS=changeme_admin_password
-EMAIL_SERVER_PORT=587
+BASE_HOST_NAME=gitlab.example.com
+APP_ADMIN_PASS=replace-with-a-random-password
 EMAIL_SERVER_HOST=172.17.0.1
-EMAIL_SERVER_MAIL_FROM=no-reply@${BASE_DOMAIN_NAME:-${BASE_HOST_NAME
+EMAIL_SERVER_PORT=587
 ```
 
 See `docker-compose.yaml` for complete list of configurable options.
 
+Further GitLab settings are made in the omnibus config mounted at
+`./volumes/config/gitlab/gitlab.rb`. The compose file seeds
+`GITLAB_OMNIBUS_CONFIG`; values you add to `gitlab.rb` take effect on the next
+`docker compose --env-file .env up -d`.
+
+### Environment Files
+
+`default.env.sample` holds the full set of variables and is copied to `.env`
+before starting the stack:
+
+```bash
+cp default.env .env
+docker compose --env-file .env up -d
+```
+
+`app.env.sample` holds the app-specific overrides and is copied to `app.env`:
+
+```bash
+cp app.env.sample app.env
+```
+
+`composemgr up` applies `app.env` and `default.env` automatically. Raw
+`docker compose` commands need `--env-file .env` to pick up the same values.
+
+### Reverse Proxy
+
+Three standalone compose files ship in this repo:
+
+| File | Use |
+|------|-----|
+| `docker-compose.yaml` | Default, published on `172.17.0.1:64186` |
+| `docker-compose.traefik.yaml` | Behind an existing external `traefik` network |
+| `docker-compose.tunnel.yaml` | Behind an existing external `cloudflare` tunnel network |
+
+```bash
+docker compose -f docker-compose.traefik.yaml --env-file .env up -d
+```
+
+The proxy variants publish no ports at all, so GitLab's SSH service is not
+reachable from the host in any variant.
+
 ## 🌐 Access
 
-- **Web Interface**: http://172.17.0.1:59129
+- **Web Interface**: http://172.17.0.1:64186
+
+GitLab's built-in SSH service is reachable only inside the project network;
+no host port is published for it. Use HTTPS remotes for host access.
 
 ## 📂 Volumes
 
-- `./volumes/config/gitlab` - Data storage
-- `./volumes/data/log/gitlab` - Data storage
-- `./volumes/data/gitlab` - Data storage
+- `./volumes/config/gitlab` - Omnibus configuration (`gitlab.rb`)
+- `./volumes/logs/gitlab` - GitLab logs
+- `./volumes/data/gitlab` - Repositories, database, and application data
 
 ## 🔐 Security
 
-- Change all default passwords before deploying to production
-- Use strong secrets for all authentication tokens
+- Set `APP_ADMIN_PASS` to a strong random password before the first start; it
+  only applies to the initial `root` account
+- GitLab needs at least 4GB of RAM; `shm_size` is set to 4g for this reason
+- GitLab sends transactional emails; configure a real SMTP relay
 - Configure HTTPS using a reverse proxy (nginx, traefik, caddy)
 - Regularly update Docker images for security patches
 - Backup your data regularly
@@ -66,32 +111,33 @@ See `docker-compose.yaml` for complete list of configurable options.
 ## 🔍 Logging
 
 ```shell
-docker compose logs -f app
+docker compose --env-file .env logs -f app
 ```
 
 ## 🛠️ Management
 
 ```bash
 # Start services
-docker compose up -d
+docker compose --env-file .env up -d
 
 # Stop services
-docker compose down
+docker compose --env-file .env down
 
 # Update to latest images
-docker compose pull && docker compose up -d
+docker compose --env-file .env pull && docker compose --env-file .env up -d
 
 # View logs
-docker compose logs -f
+docker compose --env-file .env logs -f
 
 # Restart services
-docker compose restart
+docker compose --env-file .env restart
 ```
 
 ## 📋 Requirements
 
 - Docker Engine 20.10+
 - Docker Compose V2+
+- 4GB+ of RAM
 
 ## 🤝 Author
 
