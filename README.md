@@ -92,6 +92,8 @@ reachable from the host in any variant.
 GitLab's built-in SSH service is reachable only inside the project network;
 no host port is published for it. Use HTTPS remotes for host access.
 
+Non-HTTP protocol ports are published identically in all three compose variants, because they cannot be proxied over HTTP: `2224` (Git SSH, container `22`).
+
 ## 📂 Volumes
 
 - `./volumes/config/gitlab` - Omnibus configuration (`gitlab.rb`)

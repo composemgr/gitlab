@@ -34,6 +34,8 @@ services:
         nginx['listen_https'] = false
       CONTAINER_NAME: gitlab-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+    ports:
+      - '2224:22'
     volumes:
       - './volumes/config/gitlab:/etc/gitlab'
       - './volumes/logs/gitlab:/var/log/gitlab'

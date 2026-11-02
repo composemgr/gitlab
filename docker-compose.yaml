@@ -38,6 +38,7 @@ services:
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '172.17.0.1:64186:80'
+      - '2224:22'
     volumes:
       - './volumes/config/gitlab:/etc/gitlab'
       - './volumes/logs/gitlab:/var/log/gitlab'
